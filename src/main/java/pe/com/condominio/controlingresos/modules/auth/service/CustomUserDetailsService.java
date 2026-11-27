@@ -29,7 +29,7 @@ public class CustomUserDetailsService implements UserDetailsService{
 		List<String> roles = authRepository.obtenerRoles(user.getId());
 		
 		List<GrantedAuthority> authorities = roles.stream()
-				.map(rol -> new SimpleGrantedAuthority("RoLE_"+rol))
+				.map(rol -> new SimpleGrantedAuthority("ROLE_"+rol))
 				.map(authority -> (GrantedAuthority)authority)
 				.toList();
 		
