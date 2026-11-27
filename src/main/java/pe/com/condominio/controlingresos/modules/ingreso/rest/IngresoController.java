@@ -1,8 +1,8 @@
-package pe.com.condominio.controlingresos.modules.ingreso.controller;
+package pe.com.condominio.controlingresos.modules.ingreso.rest;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -11,14 +11,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class IngresoController {
 
 	@GetMapping
-	@PreAuthorize("hasAnyRole('ASOCIADO','VIGILANTE')")
 	public String listar() {
 		return "listar ingresos.";
 	}
+	
 	@PostMapping
-	@PreAuthorize("hasRole('VIGILANTE')")
 	public String create() {
-		return "ingreso creado.";
+		return "crear ingreso";
+	}
+	@PutMapping
+	public String update() {
+		return "actualizar ingreso.";
 	}
 
 }

@@ -1,69 +1,63 @@
 package pe.com.condominio.controlingresos.modules.auth.repository;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import pe.com.condominio.controlingresos.modules.auth.model.AuthUser;
+import pe.com.condominio.controlingresos.modules.auth.repository.mapper.UserAuthMapper;
+import pe.com.condominio.controlingresos.modules.auth.repository.model.UserAuthModel;
 
 @Repository
 public class AuthRepository {
-	private final JdbcTemplate jdbcTemplate;
-	public AuthRepository(JdbcTemplate jdbcTemplate) {
+	private JdbcTemplate jdbcTemplate;
+	private UserAuthMapper userAuthMapper;
+
+	public AuthRepository(JdbcTemplate jdbcTemplate, UserAuthMapper userAuthMapper) {
 		this.jdbcTemplate = jdbcTemplate;
+		this.userAuthMapper = userAuthMapper;
 	}
-	public AuthUser findByUsername(String username) {
+
+	public Optional<UserAuthModel> buscarUsuario(String username) {
 		String sql = """
-				SELECT
-                    u.id,
-                    c.username,
-                    c.password_hash,
-                    u.active,
-                    r.code AS role_code
-                FROM control.users u
-                INNER JOIN control.auth_credentials c
-                    ON c.user_id = u.id
-                LEFT JOIN control.user_roles ur
-                    ON ur.user_id = u.id
-                LEFT JOIN control.roles r
-                    ON r.id = ur.role_id
-                WHERE LOWER(c.username) = LOWER(?)
-				""";
-        return jdbcTemplate.query(
-                sql,
-                rs -> {
+								SELECT
+				u.id as id,
+				u.nombres as nombres,
+				u.apellidos as apellidos,
+				ac.username as username,
+				ac.password_hash as password_hash,
+				ac.disabled as disabled,
+				ac.locked as locked
+				FROM
+				control.users u
+				INNER JOIN
+				control.auth_credentials ac
+				ON
+				u.id = ac.user_id
+				WHERE
+				ac.username = ?
+												""";
 
-                    if (!rs.next()) {
-                        return null;
-                    }
+		List<UserAuthModel> user = jdbcTemplate.query(sql, userAuthMapper, username);
+		return user.stream().findFirst();
+	}
 
-                    Long id = rs.getLong("id");
-                    String dbUsername = rs.getString("username");
-                    String passwordHash = rs.getString("password_hash");
-                    boolean active = rs.getBoolean("active");
-
-                    var roles = new LinkedHashSet<String>();
-
-                    do {
-                        String role = rs.getString("role_code");
-
-                        if (role != null) {
-                            roles.add(role);
-                        }
-
-                    } while (rs.next());
-
-                    return new AuthUser(
-                            id,
-                            dbUsername,
-                            passwordHash,
-                            active,
-                            new ArrayList<>(roles)
-                    );
-                },
-                username
-        );
+	public List<String> obtenerRoles(long id) {
+		String sql = """
+								SELECT
+				r.name as rol
+				FROM
+				control.roles r
+				INNER JOIN
+				control.user_roles ur
+				ON
+				r.id = ur.role_id
+				WHERE
+				ur.user_id = ?
+								""";
+		List<String> roles = jdbcTemplate.queryForList(sql,String.class,id);
+		return roles;
 	}
 }

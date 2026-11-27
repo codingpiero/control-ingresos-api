@@ -5,17 +5,29 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import pe.com.condominio.controlingresos.global.utils.JwtUtil;
 import pe.com.condominio.controlingresos.modules.auth.dto.request.LoginRequest;
-import pe.com.condominio.controlingresos.modules.auth.model.AuthUser;
+import pe.com.condominio.controlingresos.modules.auth.repository.model.CustomUserDetailModel;
 
 @Service
 public class AuthService {
-	private final AuthenticationManager authenticactionManager;
-	public AuthService(AuthenticationManager authenticationManager) {
-		this.authenticactionManager = authenticationManager;
+	private final JwtUtil jwtUtil;
+	private AuthenticationManager authenticationManager;
+
+	public AuthService(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+		this.authenticationManager = authenticationManager;
+		this.jwtUtil = jwtUtil;
 	}
-	public AuthUser authenticate(LoginRequest request) {
-		Authentication authentication = authenticactionManager.authenticate(UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password()));
-		return (AuthUser) authentication.getPrincipal();
+	
+	public String login(LoginRequest request) {
+		UsernamePasswordAuthenticationToken credentials = 
+				new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword());
+		
+		Authentication authentication = authenticationManager.authenticate(credentials);
+		CustomUserDetailModel user = (CustomUserDetailModel) authentication.getPrincipal();
+		String token = jwtUtil.generarToken(user);
+		return token;
+	
 	}
+	 
 }
